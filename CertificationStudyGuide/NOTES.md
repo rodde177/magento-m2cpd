@@ -100,6 +100,61 @@ Based on module example.
     - system.xml - configurations for Stores -> Config
     
 #### References
-[Config PHP](https://devdocs.magento.com/guides/v2.2/config-guide/config/config-php.html)
-[Config Files](https://devdocs.magento.com/guides/v2.2/config-guide/config/config-files.html)
-[Create your own config type](https://devdocs.magento.com/guides/v2.2/config-guide/config/config-create.htm)
+* [Config PHP](https://devdocs.magento.com/guides/v2.2/config-guide/config/config-php.html)
+* [Config Files](https://devdocs.magento.com/guides/v2.2/config-guide/config/config-files.html)
+* [Create your own config type](https://devdocs.magento.com/guides/v2.2/config-guide/config/config-create.htm)
+
+----------------------------------------------------
+## 1.4 Demonstrate how to use dependency injection
+#### Describe Magento’s dependency injection approach and architecture. How are objects realized in Magento?
+Dependency injection - design pattern, which allow an object A to declare its dependencies to an external object B that supplies those dependencies.
+**Object A should depends on abstraction of object B (Dependency inversion principle)**.
+###### Magento prohibits the direct use of the ObjectManager. Exception:
+ - You can use the object manager in static magic methods like __wakeup(), __sleep(), etc.
+ - You can use the ObjectManager to maintain backward compatibility for a constructor.
+ - In a global scope, like in fixtures of integration tests, you can use the object manager.
+ - The object manager can be a dependency in classes used for the creation of objects, e.g. factories or proxies.
+
+
+#### Why is it important to have a centralized process creating object instances?
+- avoid boilerplate code when composing objects during instantiation
+- simplify dependencies passing to object instances
+- create objects creation over the project
+
+#### Identify how to use DI configuration files for customizing Magento. 
+###### How can you override a native class, inject your class into another object, and use other techniques available in di.xml (such as virtualTypes)?
+##### Config file: di.xml
+##### Load stages:
+    * Initial (app/etc/di.xml)
+    * Global (<moduleDir>/etc/di.xml)
+    * Area-specific (<moduleDir>/etc/<area>/di.xml) 
+##### di.xml techniques:
+###### preferences:
+```xml
+<config>
+    <preference for="Magento\Core\Model\UrlInterface" type="Magento\Core\Model\Url" />
+</config>
+```
+##### virtualType:
+A **virtual type** allows you to change the arguments of a specific injectable dependency and change the behavior of a particular class. This allows you to use a customized class without affecting other classes that have a dependency on the original.
+```xml
+<virtualType name="moduleConfig" type="Magento\Core\Model\Config">
+    <arguments>
+        <argument name="type" xsi:type="string">system</argument>
+    </arguments>
+</virtualType>
+```
+##### Constructor argument
+```xml
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\Core\Model\Session">
+        <arguments>
+            <argument name="sessionName" xsi:type="string">adminhtml</argument>
+        </arguments>
+    </type>
+</config>
+```
+#### References
+* [Dependency injection](https://devdocs.magento.com/guides/v2.2/extension-dev-guide/depend-inj.html)
+* [Object manager](https://devdocs.magento.com/guides/v2.2/extension-dev-guide/object-manager.html)
+* [Config di.xml](https://devdocs.magento.com/guides/v2.2/extension-dev-guide/build/di-xml-file.html)
